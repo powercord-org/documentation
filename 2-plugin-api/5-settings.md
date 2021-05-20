@@ -19,7 +19,8 @@ If you attempt to store an unsupported data structure, an `Error` will be thrown
 
 ### Key naming and complex structures
 Setting keys can only be strings, but it doesn't mean you have to give up complex structures. Just like in pure
-JavaScript, you can dig (or build) structures used our beloved `.`. For example, take the following structure:
+JavaScript, you can dig (or build) structures used our beloved `.` character. For example, take the following
+structure:
 
 ###### Example settings data
 ```json
@@ -50,41 +51,168 @@ optional chaining for you, or when doing a set operation generate the whole tree
 ## Registering settings
 This step is not strictly required, but strongly recommended. It allows for Powercord to know what can be configured
 in your plugin and it's used internally to automatically build a settings UI, as well as adding shortcuts in the
-context menu of the setting wheel (the thing you click to open settings. Didn't know it existed? You're welcome.).
+context menu of the setting wheel (the thing you click to open settings. Didn't know it existed? You're welcome).
 It also lets you specify default values for all your settings in a single, central place instead of spread around in
 the getters.
 
 ###### Quick example for registering settings
 ```js
-...
-import { registerSettings } from '@powercord/settings' // Note: @powercord/settings is unavailable in DevTools
+import { Plugin } from '@powercord/core'
+import { registerSettings } from '@powercord/settings'
+// Note: @powercord/settings is unavailable in DevTools
 
 class HelloWorld extends Plugin {
   pluginStart () {
-    registerSettings([
-      {
-        key: 'mySetting',
+    registerSettings({
+      entries: [
+        {
+          key: 'mySetting',
+          ...
+        },
         ...
-      },
-      ...
-    ])
+      ]
+    })
   }
 }
-
 ```
+
+>info
+> Each plugin can only have a single settings UI. Attempting to register twice will just override previously set data.
 
 Because the registration of all the settings also includes setting up the logic for validation, the documentation
 will look a bit verbose but it's not very complicated.
 
-### Basic types
+### Basic entry properties
+ - `label`: Label shown in settings and other places. **Required**.
+ - `type`: The [type](#types) of the value. **Required**.
+ - `note`: The note (description if you prefer) shown in settings.
+ - `default`: The default value for the setting. Affects the settings UI and calls to `getSetting`.
 
-### Setting definition object structure
+### Types
+Each entry must have a valid type to it, so Powercord can generate the appropriate setting field for it and other
+internal purposes.
+
+Some types allows you to customize how the user can input the value through additional properties you can set to the
+setting entry object. They are documented below for each concerned datatype.
+
+<!-- ideas for the future: string[], string[n], ... -->
+
+#### Strings
+All of the string types allow you to specify an `options` properties to the setting entry, turning it into a `select`
+or a `set` field. Otherwise, the user will be prompted with a classic text input.
+
+##### `string`
+A basic string, just like all of the others. You can specify a minimum length and/or a maximum length by setting a
+`min` and/or a `max` to the setting entry object.
+
+##### `url`
+A glorified `string` input that only accepts valid URLs. Prevents you from validating it manually.
+
+#### Numbers
+All of the numerical types allow you to specify a set of properties to the setting entry to customize the basic
+validation rules and the way the input displays. By default, the field looks like a classic text input.
+
+ - `min` and `max`: Allows you to set boundaries to the value.
+ - `slider`: A boolean that indicates if the field should be presented as a slider. **Requires having boundaries set**.
+ - `markers`: An array of numbers to add markers to the slider. Ignored if `slider` isn't set to true.
+ - `stick`: Only allow values specified in `markers`. **Requires at least 2 markers**. Ignored if `slider` isn't set to true.
+
+##### `integer`
+A basic integer. Nothing more to say about it.
+
+>warn
+> `min`, `max` and entries in `markers` must all be integers.
+
+##### `float`
+A basic IEEE 754 64-bit floating point number with a 53 bits mathematical significand. Also known simply as a float.
+
+#### Miscellaneous
+##### `boolean`
+A basic boolean. Classic, nothing more to say.
+
+##### `color`
+A color field, which will always return a color in the `rgb(a)` form. You can add `alpha: true` to the setting entry
+object to get a picker that allows for setting the opacity.
 
 ### Data validation
+While the built-in types bring some degree of validation, you sometimes want to also have a more specific validation.
+For this purpose, you can specify an array or rules in `validationRules` that Powercord will use to validate user input.
+
+Each rule consists of 2 properties: a `rule` property that receives the user input and must return a boolean (keeping
+in mind behavior for [truthy](https://developer.mozilla.org/en-US/docs/Glossary/Truthy) and
+[falsy](https://developer.mozilla.org/en-US/docs/Glossary/Falsy) values), and a `message` property specifying the error
+message to display to the user if the check fails.
+
+###### Example of setting entry with data validation
+```js
+import { Plugin } from '@powercord/core'
+import { registerSettings } from '@powercord/settings'
+
+class HelloWorld extends Plugin {
+  pluginStart () {
+    registerSettings({
+      entries: [
+        {
+          key: 'mySetting',
+          type: 'url',
+          validationRules: [
+            {
+              rule: (value) => new URL(value).hostname === 'powercord.dev,
+              message: 'URL must be on powercord.dev'
+            },
+            {
+              rule: (value) => !new URL(value).pathname.startsWith('/backoffice'),
+              message: 'Admin endpoints are protected'
+            }
+          ]
+        },
+        ...
+      ]
+    })
+  }
+}
+```
+
+>info
+> For plugins doing [internationalization](##advanced-plugins/i18n), if you set the `message` field to
+> `Messages.MY_STRING`, it will not update when the locale is changed. To handle this case, `message` can be
+> a function returning a `string`, so for example `() => Messages.MY_STRING`.
 
 ### Dynamically enable/disable, show/hide settings
+You can specify for each entry an `isDisabled` function, and an `isHidden` function. For convenience, `isEnabled` is
+also available as well as `isVisible` for fields that are by default disabled/hidden, however you **must not** provide
+both, or an `Error` will be raised (As Powercord will be unable to decide which one to use).
+
+Functions must return a boolean (keep in mind behavior for [truthy](https://developer.mozilla.org/en-US/docs/Glossary/Truthy)
+and [falsy](https://developer.mozilla.org/en-US/docs/Glossary/Falsy) values). **The functions cannot be
+asynchronous, or return a Promise**. If they do, the result will always be truthy.
+
+>info
+> Make sure the footprint of those functions is minimal. Having methods that take a while to execute will result in
+> a laggy settings panel.
 
 ## Basic read & write
+Reading and writing is so easy that you'll just get the code for it:
+
+###### Example read & write
+```js
+import { getSetting, setSetting } from '@powercord/settings'
+
+// We assume here no default value has been defined
+
+console.log(getSetting('setting.key')) // ~> undefined
+console.log(getSetting('setting.key', 'uwu')) // ~> "uwu"
+setSetting('setting.key', 'owo')
+console.log(getSetting('setting.key', 'uwu')) // ~> "owo"
+
+// If you need to update setting based on its previous value
+// (e.g: toggling a boolean), you can pass a function to
+// setSetting, to avoid race conditions
+setSetting('test.key', (v) => !v)
+
+// You can even supply a default value if necessary, just like in get:
+setSetting('test.key', (v) => !v, true) // ~> sets to false
+```
 
 ### Within React components
 Within components, the use of the classic `getSetting` and/or `setSetting` is discouraged. Instead, you should use the
@@ -94,6 +222,7 @@ except it takes the setting key as parameter.
 
 ###### Example use of useSetting hook
 ```js
+import React from 'react'
 import { useSetting } from '@powercord/settings'
 
 export default function MyComponent () {
@@ -107,5 +236,76 @@ export default function MyComponent () {
 ```
 
 ## Subscribe to changes
+Plugins can listen to changes using the `SettingsSubscriber` object exported by `@powercord/settings`. It's useful
+to handle cases where you need to execute a piece of code, or change some bits that aren't React components where
+`useSetting` would handle everything for you. Also, fun fact `useSetting` actually uses the `SettingsSubscriber`
+internally. Crazy!
+
+>warn
+> Unlike injections, this does **not** clean up automatically. You must unsubscribe yourself!
+
+###### Subscribe & unsubscribe to changes
+```js
+import { SettingsSubscriber } from '@powercord/settings'
+
+function handler (key, previous, next) {
+  console.log(`Setting ${key} was updated from ${previous} to ${next}!`)
+}
+
+SettingsSubscriber.subscribe('settingKey', handler)
+
+...
+
+SettingsSubscriber.unsubscribe('settingKey', handler)
+```
+
+You can also subscribe to "*", which will be fired whenever any setting is updated.
+
+For cases where a structure is updated, multiple events are fired for the entire path, and parent nodes. The `key` value
+of the handler will always point to the full updated node name. For example, if you update a setting
+`my.deep.structure.value`, the following events will be fired:
+ - `my.deep.structure.value`
+ - `my.deep.structure`
+ - `my.deep`
+ - `my`
 
 ## Create a UI
+You can decide to use a custom UI for your settings page, and build it from scratch to have more control over it,
+or add additional decoration like a preview. This is done in `registerSettings`:
+
+###### Use a custom UI
+```js
+import { registerSettings } from '@powercord/settings' // Note: @powercord/settings is unavailable in DevTools
+import Settings from './Settings'
+
+registerSettings({
+  ui: Settings
+  entries: [ ... ]
+})
+```
+
+The component will replace the one Powercord would have used. However, if you just want to add a preview no worries!
+You can still get the UI Powercord would have inserted using `children`. To ensure Powercord stays speedy and don't
+render useless things, the children is a function you need to call (so it's only rendering when needed).
+
+###### Example re-use of the automatic settings UI
+```js
+import React from 'react'
+
+function Preview () {
+  return (
+    <div className='my-amazing-preview'>
+      ...
+    </div>
+  )
+}
+
+export default function Settings ({ children }) {
+  return (
+    <div>
+      <Preview/>
+      {children()}
+    </div>
+  )
+}
+```

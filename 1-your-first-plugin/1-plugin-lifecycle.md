@@ -9,6 +9,10 @@ Your plugin gets loaded in ram, fed some data, and gets wiped from ram. That's a
 for tears but to understand a plugin's lifecycle. It's slightly more complete than on the previous versions, but
 still remains fairly easy.
 
+>danger
+> You are not allowed, under any circumstances to use those methods to generate and collect analytics. Such practices
+> are prohibited as per [guideline #6](https://powercord.dev/guidelines#respect-user-privacy).
+
 ## What's a lifecycle?
 We got inspiration from React for our implementation, but it's basically a collection of specific methods called
 during various stages of your plugin. Right when it started for example, or right before unloading.
@@ -35,9 +39,6 @@ complex for Powercord, manually cleaning up side effects may help.
 ## `pluginDidInstall`
 Called when the plugin is ran for the first time after being installed.
 
->warn
-> Using this to generate and collect analytics is strictly forbidden.
-
 ## `pluginDidUpdate`
 This is called when the plugin has been updated and a **version change** did occur as per the manifest data. The
 method receives two arguments: `previousVersion` and `newVersion`. Both strictly from the manifest.
@@ -46,7 +47,6 @@ method receives two arguments: `previousVersion` and `newVersion`. Both strictly
 Called when the plugin will be uninstalled. `pluginWillUnload` will also be called. Note that it is unnecessary to
 clear config as Powercord will already handle that for you.
 
->warn
+>danger
 > Using this method to show a prompt asking the user if they are sure about it, or otherwise use it to get user
 > input before uninstall is prohibited, as per [guideline #5](https://powercord.dev/guidelines#5-no-advertising-promotion-or-spam-of-any-kind).
-> You also are not allowed to generate and collect analytics using this lifecycle method.

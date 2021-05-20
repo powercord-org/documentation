@@ -51,7 +51,7 @@ The string can be formatted in 2 ways:
 If you have a dedicated support server, you can specify an invite link (without the discord.gg part), so Powercord can
 display it to end users.
 
->warn
+>danger
 > This feature will be moderated, and any abuse in the intent to advertise an irrelevant server will be punished.
 
 ###### Discord invite example usage
@@ -62,8 +62,7 @@ display it to end users.
 ```
 
 ### `appMode` key
->danger
-> For now, this key isn't used but reserved for future use. It'll be used to make plugins run in the Discord overlay.
+For now, this key isn't used but reserved for future use. It'll be used to make plugins run in the Discord overlay.
 
 ### `order` key
 Back in v2, plugin load order was defined by a catastrophic mess of badly implemented dependency system, but this
