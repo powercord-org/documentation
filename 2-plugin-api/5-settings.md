@@ -10,9 +10,9 @@ dedicated to allowing users customize the plugin's behavior.
 
 ## The basics
 ### Limits & constrains
-Each plugin has a maximum quota of 8MB. This is to ensure plugins cannot go wild and eat user's disk space. If you
-attempt to do a set operation that'd exceed the quota, an `Error` will be thrown. The size is computed based on the
-compressed JSON representation of all the settings.
+Each plugin has a maximum quota of 8MB for its settings storage. This is to ensure plugins cannot go wild and eat
+user's disk space. If you attempt to do a set operation that'd exceed the quota, an `Error` will be thrown. The size
+is computed based on the compressed JSON representation of all the settings.
 
 Settings are also limited to types that can be stored as JSON. Symbols, functions, bigints, sets, maps aren't supported.
 If you attempt to store an unsupported data structure, an `Error` will be thrown.
@@ -99,7 +99,11 @@ setting entry object. They are documented below for each concerned datatype.
 
 #### Strings
 All of the string types allow you to specify an `options` properties to the setting entry, turning it into a `select`
-or a `set` field. Otherwise, the user will be prompted with a classic text input.
+or a `set` field. Otherwise, the user will be prompted with a classic text input. Each option is an object that with a
+`name` property and a `value` property, that both are self explanatory.
+
+If you want a radio field, you can set the `radio` property to `true` in the settings entry object. For radios, the
+options accept 2 additional properties: `color` and `description`.
 
 ##### `string`
 A basic string, just like all of the others. You can specify a minimum length and/or a maximum length by setting a
@@ -143,6 +147,13 @@ in mind behavior for [truthy](https://developer.mozilla.org/en-US/docs/Glossary/
 [falsy](https://developer.mozilla.org/en-US/docs/Glossary/Falsy) values), and a `message` property specifying the error
 message to display to the user if the check fails.
 
+#### Categories
+The type `category` is a specific type of field that allows you to have a collapsible category in your settings UI,
+which can help de-clutter your page and make the settings less scary for users.
+
+For this type, the `default` key is unused. You must specify an `entries` properties, that just behaves the same as
+the root `entries` property of `registerSettings`.
+
 ###### Example of setting entry with data validation
 ```js
 import { Plugin } from '@powercord/core'
@@ -157,7 +168,7 @@ class HelloWorld extends Plugin {
           type: 'url',
           validationRules: [
             {
-              rule: (value) => new URL(value).hostname === 'powercord.dev,
+              rule: (value) => new URL(value).hostname === 'powercord.dev',
               message: 'URL must be on powercord.dev'
             },
             {
@@ -236,9 +247,9 @@ export default function MyComponent () {
 ```
 
 ## Subscribe to changes
-Plugins can listen to changes using the `SettingsSubscriber` object exported by `@powercord/settings`. It's useful
+Plugins can listen to changes using the `SettingsDispatcher` object exported by `@powercord/settings`. It's useful
 to handle cases where you need to execute a piece of code, or change some bits that aren't React components where
-`useSetting` would handle everything for you. Also, fun fact `useSetting` actually uses the `SettingsSubscriber`
+`useSetting` would handle everything for you. Also, fun fact `useSetting` actually uses the `SettingsDispatcher`
 internally. Crazy!
 
 >warn
@@ -246,28 +257,62 @@ internally. Crazy!
 
 ###### Subscribe & unsubscribe to changes
 ```js
-import { SettingsSubscriber } from '@powercord/settings'
+import { SettingsDispatcher } from '@powercord/settings'
 
 function handler (key, previous, next) {
   console.log(`Setting ${key} was updated from ${previous} to ${next}!`)
 }
 
-SettingsSubscriber.subscribe('settingKey', handler)
+SettingsDispatcher.subscribe('settingKey', handler)
 
 ...
 
-SettingsSubscriber.unsubscribe('settingKey', handler)
+SettingsDispatcher.unsubscribe('settingKey', handler)
 ```
 
-You can also subscribe to "*", which will be fired whenever any setting is updated.
+You can also subscribe to `*`, which will be fired whenever any setting is updated. The `key` value will still be
+the name of the setting node that has been updated.
 
-For cases where a structure is updated, multiple events are fired for the entire path, and parent nodes. The `key` value
-of the handler will always point to the full updated node name. For example, if you update a setting
-`my.deep.structure.value`, the following events will be fired:
- - `my.deep.structure.value`
- - `my.deep.structure`
- - `my.deep`
- - `my`
+For cases where a structure is updated, the event will bubble up, so parent nodes will receive the update too. This
+is useful for when you want to observe an entire structure. Just like for the `*` event, the `key` value will still be
+the name of the setting node that has been updated.
+
+>node
+> While the events bubble up, they don't bubble down to children. Refer to the examples below.
+
+###### Example deep structure
+```json
+{
+  "owo": 1,
+  "a": {
+    "uwu": 2,
+    "b": {
+      "c": 5
+    }
+  }
+}
+```
+
+###### Example deep structure update 1
+```js
+import { setSetting, SettingsDispatcher } from '@powercord/settings'
+
+setSetting('a.b.c', 1337)
+// "a.b.c" emitted with: key = a.b.c, previous = 5, next = 1337
+// "a.b" emitted with: key = a.b.c, previous = 5, next = 1337
+// "a" emitted with: key = a.b.c, previous = 5, next = 1337
+// "*" emitted with: key = a.b.c, previous = 5, next = 1337
+```
+
+###### Example deep structure update 2
+```js
+import { setSetting, SettingsDispatcher } from '@powercord/settings'
+
+setSetting('a.b', { c: 1337 })
+// "a.b" emitted with: key = a.b, previous = { c: 5 }, next = { c: 1337 }
+// "a" emitted with: key = a.b, previous = { c: 5 }, next = { c: 1337 }
+// "*" emitted with: key = a.b, previous = { c: 5 }, next = { c: 1337 }
+```
 
 ## Create a UI
 You can decide to use a custom UI for your settings page, and build it from scratch to have more control over it,
@@ -275,11 +320,11 @@ or add additional decoration like a preview. This is done in `registerSettings`:
 
 ###### Use a custom UI
 ```js
-import { registerSettings } from '@powercord/settings' // Note: @powercord/settings is unavailable in DevTools
+import { registerSettings } from '@powercord/settings'
 import Settings from './Settings'
 
 registerSettings({
-  ui: Settings
+  ui: Settings,
   entries: [ ... ]
 })
 ```
