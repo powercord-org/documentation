@@ -17,6 +17,8 @@ is computed based on the compressed JSON representation of all the settings.
 Settings are also limited to types that can be stored as JSON. Symbols, functions, bigints, sets, maps aren't supported.
 If you attempt to store an unsupported data structure, an `Error` will be thrown.
 
+A key cannot contain `*`, and cannot start with 2 underscores (`__`). Those are reserved for internal use.
+
 ### Key naming and complex structures
 Setting keys can only be strings, but it doesn't mean you have to give up complex structures. Just like in pure
 JavaScript, you can dig (or build) structures used our beloved `.` character. For example, take the following
@@ -85,7 +87,7 @@ will look a bit verbose but it's not very complicated.
 ### Basic entry properties
  - `label`: Label shown in settings and other places. **Required**.
  - `type`: The [type](#types) of the value. **Required**.
- - `note`: The note (description if you prefer) shown in settings.
+ - `note`: The note (description if you prefer) shown in settings. Inline markdown will be formatted.
  - `default`: The default value for the setting. Affects the settings UI and calls to `getSetting`.
 
 ### Types
@@ -94,8 +96,6 @@ internal purposes.
 
 Some types allows you to customize how the user can input the value through additional properties you can set to the
 setting entry object. They are documented below for each concerned datatype.
-
-<!-- ideas for the future: string[], string[n], ... -->
 
 #### Strings
 All of the string types allow you to specify an `options` properties to the setting entry, turning it into a `select`
@@ -138,6 +138,20 @@ A basic boolean. Classic, nothing more to say.
 A color field, which will always return a color in the `rgb(a)` form. You can add `alpha: true` to the setting entry
 object to get a picker that allows for setting the opacity.
 
+#### Arrays
+All types but `boolean` can be declined to arrays simply by adding `[]` to the type (e.g.: `string[]`). You can specify
+a max length by specifying an integer in the brackets (e.g.: `string[3]`).
+
+[Validation rules](#data-validation) will be ran for each entry individually by default. You can request the entire
+array by setting the `validateBulk` property on the setting entry object to true.
+
+#### Categories
+The type `category` is a specific type of field that allows you to have a collapsible category in your settings UI,
+which can help de-clutter your page and make the settings less scary for users.
+
+For this type, the `default` key is unused. You must specify an `entries` properties, that just behaves the same as
+the root `entries` property of `registerSettings`.
+
 ### Data validation
 While the built-in types bring some degree of validation, you sometimes want to also have a more specific validation.
 For this purpose, you can specify an array or rules in `validationRules` that Powercord will use to validate user input.
@@ -146,13 +160,6 @@ Each rule consists of 2 properties: a `rule` property that receives the user inp
 in mind behavior for [truthy](https://developer.mozilla.org/en-US/docs/Glossary/Truthy) and
 [falsy](https://developer.mozilla.org/en-US/docs/Glossary/Falsy) values), and a `message` property specifying the error
 message to display to the user if the check fails.
-
-#### Categories
-The type `category` is a specific type of field that allows you to have a collapsible category in your settings UI,
-which can help de-clutter your page and make the settings less scary for users.
-
-For this type, the `default` key is unused. You must specify an `entries` properties, that just behaves the same as
-the root `entries` property of `registerSettings`.
 
 ###### Example of setting entry with data validation
 ```js
@@ -246,6 +253,13 @@ export default function MyComponent () {
 }
 ```
 
+### Clear settings
+If you want to delete a setting and go back to the default, you can simply set that setting to `undefined`, using
+`setSetting`.
+
+If you want to purge **all** settings, you can use `purgeSettings`. Be careful with this function, there is **no**
+going back!
+
 ## Subscribe to changes
 Plugins can listen to changes using the `SettingsDispatcher` object exported by `@powercord/settings`. It's useful
 to handle cases where you need to execute a piece of code, or change some bits that aren't React components where
@@ -277,7 +291,7 @@ For cases where a structure is updated, the event will bubble up, so parent node
 is useful for when you want to observe an entire structure. Just like for the `*` event, the `key` value will still be
 the name of the setting node that has been updated.
 
->node
+>info
 > While the events bubble up, they don't bubble down to children. Refer to the examples below.
 
 ###### Example deep structure
@@ -313,6 +327,17 @@ setSetting('a.b', { c: 1337 })
 // "a" emitted with: key = a.b, previous = { c: 5 }, next = { c: 1337 }
 // "*" emitted with: key = a.b, previous = { c: 5 }, next = { c: 1337 }
 ```
+
+### Behavior for setting deletion/purge
+When you delete a simple setting using the method described above, the new value passed in the event handler is the
+**default value** if it was specified in `registerSettings`. Otherwise, it will be `undefined`.
+
+For settings purges, the event is dispatched to all currently subscribed handlers. For complex structures, the
+behavior will be the same as if an update was dispatched to the key you are subscribed to. You will not receive events
+for children, as events don't bubble down.
+
+>danger
+> Settings purges can be requested by the user, so make sure your event handlers play nicely with this behavior.
 
 ## Create a UI
 You can decide to use a custom UI for your settings page, and build it from scratch to have more control over it,
