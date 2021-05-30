@@ -5,5 +5,6 @@
 -->
 
 # Notifications
+## In-app
+## Toasts
 ## Banner
-## Toast

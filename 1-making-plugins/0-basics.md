@@ -129,8 +129,8 @@ just `true`.
 Even though most OSS licenses allow redistributing software provided the copyright notice is kept, this "trust license
 text" approach ended in several troubles between developers and 3rd party plugin & theme listing websites.
 
-To address this, we made a [Listing Websites Agreement](https://powercord.dev/listing-agreement) that all websites
-must abide by, and we require developers to explicitly consent to be listed on external websites.
+To address this, we made it a requirement that all listing websites must have developers' explicitly consent to be
+listed on external websites.
 
 For the time being, this is the only use of this manifest key, although in the future we may add a new use case for the
 key. The format is an array of strings, with a valid consent type inside. **By default, no consent is granted**.

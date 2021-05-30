@@ -6,7 +6,7 @@
 
 # Useful Resources
 Powercord provides a lot of features out of the box, but the community also put some work into making developer's life
-easier when using Powercord or working with our APIs. 
+easier when using Powercord or working with our APIs.
 
 Since they are very useful and made by very cute people we've listed them all here so you can easily find some
 good high™️ quality™️ stuff.

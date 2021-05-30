@@ -10,7 +10,7 @@ dedicated to allowing users customize the plugin's behavior.
 
 ## The basics
 ### Limits & constrains
-Each plugin has a maximum quota of 8MB for its settings storage. This is to ensure plugins cannot go wild and eat
+Each plugin has a maximum quota of 2048KB for its settings storage. This is to ensure plugins cannot go wild and eat
 user's disk space. If you attempt to do a set operation that'd exceed the quota, an `Error` will be thrown. The size
 is computed based on the compressed JSON representation of all the settings.
 
@@ -89,6 +89,7 @@ will look a bit verbose but it's not very complicated.
  - `type`: The [type](#types) of the value. **Required**.
  - `note`: The note (description if you prefer) shown in settings. Inline markdown will be formatted.
  - `default`: The default value for the setting. Affects the settings UI and calls to `getSetting`.
+ - `noSync`: Set to true if you want to exclude that setting from Settings Sync.
 
 ### Types
 Each entry must have a valid type to it, so Powercord can generate the appropriate setting field for it and other
@@ -143,7 +144,7 @@ All types but `boolean` can be declined to arrays simply by adding `[]` to the t
 a max length by specifying an integer in the brackets (e.g.: `string[3]`).
 
 [Validation rules](#data-validation) will be ran for each entry individually by default. You can request the entire
-array by setting the `validateBulk` property on the setting entry object to true.
+array by setting the `validateBulk` property on the verification rule object to `true`.
 
 #### Categories
 The type `category` is a specific type of field that allows you to have a collapsible category in your settings UI,

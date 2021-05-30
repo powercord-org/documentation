@@ -109,7 +109,9 @@ directly import a specific file using variables, like this:
 ###### Example of variable import
 ```js
 function loadLocale (locale) {
-  import(`./locales/${locale}.json`).then((strings) => console.log(strings))
+  import(`./locales/${locale}.json`)
+    .then((strings) => console.log(strings))
+    .catch(() => console.error('Locale not found "%s".', locale))
 }
 ```
 
