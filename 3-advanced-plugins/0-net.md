@@ -27,18 +27,24 @@ compared to the more classic browser security concerns.
 
 All of the following initialization parameters are **ignored** when calling `fetch`:
  - `mode`
- - `credentials`
  - `referrer`
  - `referrerPolicy`
  - `integrity`
  - `keepalive`
- - `cache`
- - `signal` *Support may be added in the future*
 
 The returned [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) object follows the spec, expect:
  - the `type` property is unset
  - the only methods available are `json()`, `text()` and `buffer()`, and they **do not return a `Promise`**
  - the `buffer()` method returns a [`Uint8Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array)
+
+#### Tracking upload progress
+For security reasons plugins do not have access to `XMLHttpRequest` (mainly as we'd need to provide a facade
+implementation to enforce our own policies), but the issue is that this is the only way to track progress of uploads
+as `fetch` doesn't provide this feature.
+
+In Powercord, our modified `fetch` accepts an `onUploadProgress` function passed as an option; it'll receive a number
+between 0 and 1 reporting the progress of the upload. Unless the request is aborted (network issue, abort signal) you
+are guaranteed to receive `1`, however you will most likely not receive `0`.
 
 ## TCP Sockets
 <!-- todo: draft something; I kinda want an api similar to WebSocket -->
