@@ -10,13 +10,6 @@ Here are some documentation on how PlugPack will bundle your code and how you ca
 actions.
 
 ## Workers
->danger
-> Due to browser security policies and some implementation difficulties (because electron lacks things you'd expect
-> to be basic features, see [electron/electron#26065](https://github.com/electron/electron/pull/26065)), workers are
-> currently not available and will raise an error if you try to use them.
->
-> The future behavior of workers is still documented below.
-
 To spawn a new `Worker`, you simply need to instantiate your worker like you'd normally do, and point to the worker
 script. The path must be relative to the file you're spawning the worker from. PlugPack will recognize the structure
 and perform the appropriated actions.
