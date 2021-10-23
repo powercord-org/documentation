@@ -14,7 +14,7 @@ multiple Powercord Staff members.
 ## Report a copyright violation
 If you found content that you own that is in violation of your copyright, you can report it to us using the built-in
 "report" feature within the Powercord Store, or simply contact a Powercord Staff member (either by DM, or in our
-[support server](https://discord.gg/gs4ZMbBfCh), preferably in the misc-support category).
+[support server](https://discord.gg/powercord), preferably in the misc-support category).
 
 If the content happens to be in violation of your copyright, we will remove it from the store and notify the user
 about this matter. If only a part of the work is infringing, they'll be invited to remove said part so their work

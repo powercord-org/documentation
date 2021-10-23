@@ -8,3 +8,6 @@
 ## In-app
 ## Toasts
 ## Banner
+Banners are native Discord thingies that shows up at the top of the Discord client, and that can contain a single
+button. Only a single can be shown at any given time, and subsequent ones are queued and displayed once the previous
+one has been acknowledged by the user.

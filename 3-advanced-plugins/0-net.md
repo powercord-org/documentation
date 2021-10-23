@@ -32,6 +32,7 @@ All of the following initialization parameters are **ignored** when calling `fet
  - `integrity`
  - `keepalive`
 
+<!-- todo: consider more closely following the Response object -->
 The returned [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) object follows the spec, expect:
  - the `type` property is unset
  - the only methods available are `json()`, `text()` and `buffer()`, and they **do not return a `Promise`**
@@ -45,6 +46,12 @@ as `fetch` doesn't provide this feature.
 In Powercord, our modified `fetch` accepts an `onUploadProgress` function passed as an option; it'll receive a number
 between 0 and 1 reporting the progress of the upload. Unless the request is aborted (network issue, abort signal) you
 are guaranteed to receive `1`, however you will most likely not receive `0`.
+
+```js
+fetch('https://powercord.dev/', {
+  onUploadProgress: (progress) => console.log(progress)
+})
+```
 
 ## TCP Sockets
 <!-- todo: draft something; I kinda want an api similar to WebSocket -->

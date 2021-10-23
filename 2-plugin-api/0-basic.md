@@ -22,4 +22,11 @@ In devtools, you can fetch them by doing `$pc.modules.get('<module>')`.
  - [`flux`](https://npm.im/flux)
  - [`lodash`](https://npm.im/lodash)
  - [`pako`](https://npm.im/pako)
+ - [`moment`](https://npm.im/moment)
+ - [`hljs`](https://npm.im/hljs)
+ - `@discord/constants` Constants used by Discord
  - `@discord/dispatcher`: Discord's instance of FluxDispatcher
+ - `@discord/modal`: Discord's modal controller
+ - `@discord/i18n`: See [Internationalization](##advanced-plugins/i18n)
+
+<!-- node: @discord/http is intentionally left undocumented here -->

@@ -8,11 +8,19 @@
 Powercord plugins are more complex than a single file, but don't worry, it's still super simple and will even
 simplify your life during plugin development.
 
-The most basic plugin there can be constitutes of 2 files: the [manifest](#manifest) and an [index.js](#index-js) file.
-
 >info
 > Quick note before we get into the basics, you should first review our [guidelines](https://powercord.dev/guidelines)
 > which defines what plugins are allowed to do and what they aren't. They're here to ensure a safe ecosystem!
+
+## General structure and reserved names
+The most basic plugin there can be constitutes of 2 files: the [manifest.json](#manifest) file and an
+[index.js](#index-js) file. They are required for plugins to function, and must be named like that.
+
+Then, you are free to split your plugin in as many files as you want! No more monolithic plugin that's 800 lines long,
+or having to bundle plugins yourself. There are however some reserved names for specific features which you can't
+freely use:
+
+ - `<plugin root>/i18n/`: Reserved for [i18n](##advanced-plugins/i18n) data
 
 ## Manifest
 This file is super important, since it lets Powercord know what your plugin is, who's its author, and various other
@@ -57,7 +65,7 @@ display it to end users.
 ###### Discord invite example usage
 ```json
 {
-  "discord": "gs4ZMbBfCh"
+  "discord": "powercord"
 }
 ```
 
